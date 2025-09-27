@@ -57,7 +57,7 @@ async def start(bot, m: Message):
             f"🌟 Welcome {m.from_user.first_name}! 🌟\n\n"
             f"Great! You are a premium member!\n"
             f"Use button: **✨ Commands** to get started 🌟\n\n"
-            f"If you face any problem contact - [{CREDIT}](tg://openmessage?user_id={OWNER})\n"
+            f"If you face any problem contact -  Love 💕"
         )
     else:
         caption = (
@@ -65,7 +65,7 @@ async def start(bot, m: Message):
             f"**You are currently using the free version.** 🆓\n\n"
             f"I'm here to make your life easier by downloading videos from your **.txt** file 📄 and uploading them directly to Telegram!\n\n"
             f"**Want to get started? Press /id**\n\n"
-            f"💬 Contact: [{CREDIT}](tg://openmessage?user_id={OWNER}) to Get The Subscription 🎫 and unlock the full potential of your new bot! 🔓\n"
+            f"💬 Contact: Love 💕 to Get The Subscription 🎫 and unlock the full potential of your new bot! 🔓\n"
         )
     await bot.send_photo(
         chat_id=m.chat.id,
