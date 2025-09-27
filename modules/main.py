@@ -1,4 +1,4 @@
-import os
+ import os
 import re
 import sys
 import json
@@ -69,7 +69,7 @@ async def start(bot, m: Message):
         )
     await bot.send_photo(
         chat_id=m.chat.id,
-        photo="ttps://envs.sh/GVI.jpg",
+        photo="https://envs.sh/Gln.jpg",
         caption=caption,
         reply_markup=keyboard
     )
