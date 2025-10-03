@@ -29,8 +29,27 @@ def duration(filename):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
     return float(result.stdout)
+
+
+def random_hex_color(alpha=0.90):
+    """Return random hex color with alpha transparency (ffmpeg compatible)"""
+    # Adjusted range for deeper, more attractive colors: lower min for darker shades
+    r = random.randint(0, 200)
+    g = random.randint(0, 200)
+    b = random.randint(0, 200)
+    # Ensure at least one channel is high for vibrancy
+    if max(r, g, b) < 100:
+        high_channel = random.choice([0, 1, 2])
+        if high_channel == 0:
+            r = random.randint(150, 255)
+        elif high_channel == 1:
+            g = random.randint(150, 255)
+        else:
+            b = random.randint(150, 255)
+    # hex format + @alpha
+    return f"#{r:02x}{g:02x}{b:02x}@{alpha}"
     
-def random_hex_color(alpha=0.75):
+def random_hex_vvvcolor(alpha=0.75):
     """Return random hex color with alpha transparency (ffmpeg compatible)"""
     r = random.randint(50, 255)
     g = random.randint(50, 255)
@@ -406,7 +425,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
             ffmpeg_cmd = [
                 "ffmpeg", "-y", "-i", thumbnail,
                 "-vf", f"drawtext=fontfile='{font_path}':text='{safe_text}':"
-                       f"fontcolor={color}:fontsize=(h/10):x=(w-text_w)/2:y=(h-text_h)/2",
+                       f"fontcolor={color}:fontsize=(h/5):x=(w-text_w)/2:y=(h-text_h)/2",
                 wm_thumb
             ]
 
