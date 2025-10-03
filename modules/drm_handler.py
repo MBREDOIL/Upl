@@ -1083,10 +1083,8 @@ def register_drm_handlers(bot):
             )
 
             # overwrite m with the reply so downstream code me 'm' hi use ho
-            m = answer  
-
-            # ab m ko hi process karenge
-            async def call_drm_handler(bot: Client, m: Message):
+            m = answer
+            
             await drm_handler(bot, m)
 
         except Exception as e:
@@ -1106,7 +1104,6 @@ def register_drm_handlers(bot):
             m = answer  
 
             # ab m ko hi process karenge
-            async def call_drn_handler(bot: Client, m: Message):
             await drn_handler(bot, m)
 
         except Exception as e:
