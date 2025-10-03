@@ -1086,7 +1086,8 @@ def register_drm_handlers(bot):
             m = answer  
 
             # ab m ko hi process karenge
-            await call_drm_handler(bot, m)
+            async def call_drm_handler(bot: Client, m: Message):
+            await drm_handler(bot, m)
 
         except Exception as e:
             await m.reply(f"❌ Error: {e}")
@@ -1105,7 +1106,8 @@ def register_drm_handlers(bot):
             m = answer  
 
             # ab m ko hi process karenge
-            await call_drn_handler(bot, m)
+            async def call_drn_handler(bot: Client, m: Message):
+            await drn_handler(bot, m)
 
         except Exception as e:
             await m.reply(f"❌ Error: {e}")
