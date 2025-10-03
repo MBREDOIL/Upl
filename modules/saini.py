@@ -30,12 +30,12 @@ def duration(filename):
         stderr=subprocess.STDOUT)
     return float(result.stdout)
 
-def random_color():
-    """Return random RGB with alpha transparency (0.75 opacity)"""
+def random_rgba():
+    """Return random rgba color with alpha (0.75)"""
     r = random.randint(100, 255)
     g = random.randint(100, 255)
     b = random.randint(100, 255)
-    return f"{r}/{g}/{b}@0.75"
+    return f"rgba={r}:{g}:{b}:0.75"
 
 
 def get_mps_and_keys(api_url):
@@ -372,10 +372,10 @@ async def send_vidd_mark(bot: Client, m: Message, cc, filename, vidwatermark, th
 
 
 
-
 async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, name, prog, channelid):
-    # Generate thumbnail from 10th second
-    subprocess.run(f'ffmpeg -i "{filename}" -ss 00:00:10 -vframes 1 "{filename}.jpg"', shell=True)
+    # Generate thumbnail
+    thumb_path = f"{filename}.jpg"
+    subprocess.run(f'ffmpeg -y -i "{filename}" -ss 00:00:10 -vframes 1 "{thumb_path}"', shell=True)
     await prog.delete(True)
 
     reply1 = await bot.send_message(channelid, f"📩 Uploading Video 📩:-\n<blockquote>{name}</blockquote>")
@@ -384,41 +384,45 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
     try:
         # Thumbnail logic
         if thumb == "/d":
-            thumbnail = f"{filename}.jpg"
+            thumbnail = thumb_path
         else:
             thumbnail = thumb  
 
-        # ✅ Apply watermark only on thumbnail
+        # ✅ Only watermark on thumbnail
         if vidwatermark != "/d":
             wm_thumb = f"wm_{os.path.basename(thumbnail)}"
-            font_path = "vidwater.ttf"
 
-            # escape text safely for ffmpeg
+            # try primary font, else fallback to default
+            font_path = "vidwater.ttf"
+            if not os.path.exists(font_path):
+                font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+
+            # escape special chars
             safe_text = vidwatermark.replace(":", "\\:").replace("'", "\\'")
 
-            # dynamic random color
-            color = random_color()
+            # dynamic color
+            color = random_rgba()
 
-            ffmpeg_cmd = (
-                f'ffmpeg -y -i "{thumbnail}" -vf '
-                f'"drawtext=fontfile={font_path}:text=\'{safe_text}\':'
-                f'fontcolor={color}:fontsize=(h/10):x=(w-text_w)/2:y=(h-text_h)/2" '
-                f'"{wm_thumb}"'
-            )
+            ffmpeg_cmd = [
+                "ffmpeg", "-y", "-i", thumbnail,
+                "-vf", f"drawtext=fontfile={font_path}:text='{safe_text}':"
+                       f"fontcolor={color}:fontsize=(h/10):x=(w-text_w)/2:y=(h-text_h)/2",
+                wm_thumb
+            ]
 
             try:
-                subprocess.run(ffmpeg_cmd, shell=True, check=True)
+                subprocess.run(ffmpeg_cmd, check=True)
                 thumbnail = wm_thumb
-            except Exception as wm_err:
+            except subprocess.CalledProcessError as wm_err:
                 await m.reply_text(f"⚠️ Watermark failed, sending plain thumbnail.\nError: {wm_err}")
-                thumbnail = f"{filename}.jpg"
+                thumbnail = thumb_path
 
-        output_file = filename  # video no watermark
+        output_file = filename  # video remains original
 
     except Exception as e:
         await m.reply_text("❌ Thumbnail watermark error:\n" + str(e))
         output_file = filename
-        thumbnail = f"{filename}.jpg"
+        thumbnail = thumb_path
 
     # Duration
     dur = int(duration(output_file))
@@ -448,9 +452,10 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
         )
 
     # Cleanup
-    for f in [f"{filename}.jpg", f"wm_{os.path.basename(filename)}.jpg"]:
+    for f in [thumb_path, f"wm_{os.path.basename(filename)}.jpg"]:
         if os.path.exists(f):
             os.remove(f)
 
     await reply.delete(True)
     await reply1.delete(True)
+
