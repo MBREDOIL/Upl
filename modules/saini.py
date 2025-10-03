@@ -341,7 +341,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
             width=1280,
             thumb=thumbnail,
             duration=dur,
-            progress=progressbar,
+            progress=progress_bar,
             progress_args=(reply, start_time)
         )
     except Exception:
@@ -349,7 +349,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
             channelid,
             output_file,
             caption=cc,
-            progress=progressbar,
+            progress=progress_bar,
             progress_args=(reply, start_time)
         )
 
