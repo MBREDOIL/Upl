@@ -29,13 +29,25 @@ def duration(filename):
         stderr=subprocess.STDOUT)
     return float(result.stdout)
 
+
+
 def get_mps_and_keys(api_url):
     response = requests.get(api_url)
     response_json = response.json()
-    #mpd = response_json.get('MPD')
-    #keys = response_json.get('KEYS')
-    mpd = response_json.get('url')
-    keys = response_json.get('keys')
+
+    # Try first method, fallback to second if None
+    mpd = response_json.get('MPD') or response_json.get('url')
+    keys = response_json.get('KEYS') or response_json.get('keys')
+
+    return mpd, keys
+
+def get_mps_and_keyuus(api_url):
+    response = requests.get(api_url)
+    response_json = response.json()
+    mpd = response_json.get('MPD')
+    keys = response_json.get('KEYS')
+    #mpd = response_json.get('url')
+    #keys = response_json.get('keys')
     return mpd, keys
    
 def exec(cmd):
