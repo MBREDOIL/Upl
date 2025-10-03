@@ -297,38 +297,67 @@ async def download_and_decrypt_video(url, cmd, name, key):
             print(f"Failed to decrypt {video_path}.")  
             return None  
 
-async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, name, prog, channel_id):
+async def sendvid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, name, prog, channelid):
     subprocess.run(f'ffmpeg -i "{filename}" -ss 00:00:10 -vframes 1 "{filename}.jpg"', shell=True)
-    await prog.delete (True)
-    reply1 = await bot.send_message(channel_id, f"**📩 Uploading Video 📩:-**\n<blockquote>**{name}**</blockquote>")
-    reply = await m.reply_text(f"**Generate Thumbnail:**\n<blockquote>**{name}**</blockquote>")
+    await prog.delete(True)
+    reply1 = await bot.send_message(channelid, f"📩 Uploading Video 📩:-\n<blockquote>{name}</blockquote>")
+    reply = await m.reply_text(f"Generate Thumbnail:\n<blockquote>{name}</blockquote>")
+    
     try:
+        # Thumbnail logic
         if thumb == "/d":
             thumbnail = f"{filename}.jpg"
         else:
             thumbnail = thumb  
-        
+
+        # Watermark logic
         if vidwatermark == "/d":
-            w_filename = f"{filename}"
+            output_file = filename   # No watermark
         else:
-            w_filename = f"w_{filename}"
+            output_file = f"w_{os.path.basename(filename)}"
             font_path = "vidwater.ttf"
             subprocess.run(
-                f'ffmpeg -i "{filename}" -vf "drawtext=fontfile={font_path}:text=\'{vidwatermark}\':fontcolor=white@0.3:fontsize=h/6:x=(w-text_w)/2:y=(h-text_h)/2" -codec:a copy "{w_filename}"',
+                f'ffmpeg -i "{filename}" -vf "drawtext=fontfile={font_path}:text=\'{vidwatermark}\':'
+                f'fontcolor=white@0.3:fontsize=h/12:x=(w-text_w)/2:y=(h-text_h)/2" '
+                f'-codec:a copy "{output_file}"',
                 shell=True
             )
-            
     except Exception as e:
-        await m.reply_text(str(e))
+        await m.reply_text("❌ Watermark error:\n" + str(e))
+        output_file = filename
 
-    dur = int(duration(w_filename))
+    # Duration
+    dur = int(duration(output_file))
     start_time = time.time()
 
+    # Upload video
     try:
-        await bot.send_video(channel_id, w_filename, caption=cc, supports_streaming=True, height=720, width=1280, thumb=thumbnail, duration=dur, progress=progress_bar, progress_args=(reply, start_time))
+        await bot.send_video(
+            channelid,
+            output_file,
+            caption=cc,
+            supports_streaming=True,
+            height=720,
+            width=1280,
+            thumb=thumbnail,
+            duration=dur,
+            progress=progressbar,
+            progress_args=(reply, start_time)
+        )
     except Exception:
-        await bot.send_document(channel_id, w_filename, caption=cc, progress=progress_bar, progress_args=(reply, start_time))
-    os.remove(w_filename)
+        await bot.send_document(
+            channelid,
+            output_file,
+            caption=cc,
+            progress=progressbar,
+            progress_args=(reply, start_time)
+        )
+
+    # Cleanup
+    if output_file != filename and os.path.exists(output_file):
+        os.remove(output_file)
+    if os.path.exists(f"{filename}.jpg"):
+        os.remove(f"{filename}.jpg")
+
     await reply.delete(True)
     await reply1.delete(True)
-    os.remove(f"{filename}.jpg")
