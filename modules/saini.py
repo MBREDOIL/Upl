@@ -297,7 +297,7 @@ async def download_and_decrypt_video(url, cmd, name, key):
             print(f"Failed to decrypt {video_path}.")  
             return None  
 
-async def sendvid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, name, prog, channelid):
+async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, name, prog, channelid):
     subprocess.run(f'ffmpeg -i "{filename}" -ss 00:00:10 -vframes 1 "{filename}.jpg"', shell=True)
     await prog.delete(True)
     reply1 = await bot.send_message(channelid, f"📩 Uploading Video 📩:-\n<blockquote>{name}</blockquote>")
