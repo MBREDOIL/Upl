@@ -44,6 +44,40 @@ from vars import api_url, api_token
 # .....,.....,.......,...,.......,....., .....,.....,.......,...,.......,.....,
 
 
+def extract_topic_and_clean_title(raw_title: str) -> tuple:
+    brackets = {'(': ')', '[': ']', '{': '}'}
+    if not raw_title or raw_title[0] not in brackets:
+        t_name = "Untitled"
+        v_name = raw_title
+    else:
+        start = 0
+        open_type = raw_title[0]
+        close_type = brackets[open_type]
+        stack = 1
+        end = -1
+        for i in range(1, len(raw_title)):
+            c = raw_title[i]
+            if c == open_type:
+                stack += 1
+            elif c == close_type:
+                stack -= 1
+                if stack == 0:
+                    end = i
+                    break
+        if end == -1:
+            t_name = "Untitled"
+            v_name = raw_title
+        else:
+            t_name = raw_title[start + 1:end].strip()
+            v_name = raw_title[end + 1:]
+    # Clean v_name by replacing brackets with space
+    v_name = ''.join(' ' if c in '(){}[]' else c for c in v_name)
+    v_name = re.sub(r'\s+', ' ', v_name).strip()
+    v_name = re.sub(r":.*", "", v_name).strip()
+    return t_name, v_name
+
+##===================================#===========
+    
 async def drm_handler(bot: Client, m: Message):
     globals.processing_request = True
     globals.cancel_requested = False
@@ -253,16 +287,8 @@ async def drm_handler(bot: Client, m: Message):
             else:
                 if topic == "/yes":
                     raw_title = links[i][0]
-                    t_match = re.search(r"[\(\[]([^\)\]]+)[\)\]]", raw_title)
-                    if t_match:
-                        t_name = t_match.group(1).strip()
-                        v_name = re.sub(r"^[\(\[][^\)\]]+[\)\]]\s*", "", raw_title)
-                        v_name = re.sub(r"[\(\[][^\)\]]+[\)\]]", "", v_name)
-                        v_name = re.sub(r":.*", "", v_name).strip()
-                    else:
-                        t_name = "Untitled"
-                        v_name = re.sub(r":.*", "", raw_title).strip()
-                    
+                    t_name, v_name = extract_topic_and_clean_title(raw_title)
+
                     if endfilename == "/d":
                         name = f'{str(count).zfill(3)}) {name1[:60]}'
                         namef = f'{v_name}'
@@ -767,16 +793,8 @@ async def drn_handler(bot: Client, m: Message):
             else:
                 if topic == "/yes":
                     raw_title = links[i][0]
-                    t_match = re.search(r"[\(\[]([^\)\]]+)[\)\]]", raw_title)
-                    if t_match:
-                        t_name = t_match.group(1).strip()
-                        v_name = re.sub(r"^[\(\[][^\)\]]+[\)\]]\s*", "", raw_title)
-                        v_name = re.sub(r"[\(\[][^\)\]]+[\)\]]", "", v_name)
-                        v_name = re.sub(r":.*", "", v_name).strip()
-                    else:
-                        t_name = "Untitled"
-                        v_name = re.sub(r":.*", "", raw_title).strip()
-                    
+                    t_name, v_name = extract_topic_and_clean_title(raw_title)
+
                     if endfilename == "/d":
                         name = f'{str(count).zfill(3)}) {name1[:60]}'
                         namef = f'{v_name}'
@@ -790,6 +808,7 @@ async def drn_handler(bot: Client, m: Message):
                     else:
                         name = f'{str(count).zfill(3)}) {name1[:60]} {endfilename}'
                         namef = f'{name1[:60]} {endfilename}'
+                        
                         
 #........................................................................................................................................................................................
             if "visionias" in url:
