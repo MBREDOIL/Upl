@@ -29,13 +29,14 @@ def duration(filename):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
     return float(result.stdout)
-
-def random_rgba():
-    """Return random rgba color with alpha (0.75)"""
-    r = random.randint(100, 255)
-    g = random.randint(100, 255)
-    b = random.randint(100, 255)
-    return f"rgba={r}:{g}:{b}:0.75"
+    
+def random_hex_color(alpha=0.75):
+    """Return random hex color with alpha transparency (ffmpeg compatible)"""
+    r = random.randint(50, 255)
+    g = random.randint(50, 255)
+    b = random.randint(50, 255)
+    # hex format + @alpha
+    return f"#{r:02x}{g:02x}{b:02x}@{alpha}"
 
 
 def get_mps_and_keys(api_url):
@@ -371,7 +372,6 @@ async def send_vidd_mark(bot: Client, m: Message, cc, filename, vidwatermark, th
 
 
 
-
 async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, name, prog, channelid):
     # Generate thumbnail
     thumb_path = f"{filename}.jpg"
@@ -392,20 +392,20 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
         if vidwatermark != "/d":
             wm_thumb = f"wm_{os.path.basename(thumbnail)}"
 
-            # try primary font, else fallback to default
+            # try primary font, else fallback to system font
             font_path = "vidwater.ttf"
             if not os.path.exists(font_path):
                 font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
-            # escape special chars
+            # escape text safely for ffmpeg
             safe_text = vidwatermark.replace(":", "\\:").replace("'", "\\'")
 
-            # dynamic color
-            color = random_rgba()
+            # dynamic color (hex + transparency)
+            color = random_hex_color()
 
             ffmpeg_cmd = [
                 "ffmpeg", "-y", "-i", thumbnail,
-                "-vf", f"drawtext=fontfile={font_path}:text='{safe_text}':"
+                "-vf", f"drawtext=fontfile='{font_path}':text='{safe_text}':"
                        f"fontcolor={color}:fontsize=(h/10):x=(w-text_w)/2:y=(h-text_h)/2",
                 wm_thumb
             ]
@@ -417,7 +417,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
                 await m.reply_text(f"⚠️ Watermark failed, sending plain thumbnail.\nError: {wm_err}")
                 thumbnail = thumb_path
 
-        output_file = filename  # video remains original
+        output_file = filename  # video stays original
 
     except Exception as e:
         await m.reply_text("❌ Thumbnail watermark error:\n" + str(e))
@@ -458,4 +458,3 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
 
     await reply.delete(True)
     await reply1.delete(True)
-
