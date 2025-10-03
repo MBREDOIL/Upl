@@ -551,7 +551,24 @@ async def drm_handler(bot: Client, m: Message):
             await bot.send_message(m.chat.id, f"<blockquote><b>✅ Your Task is completed, please check your Set Channel📱</b></blockquote>")
 
 #============================================================================================================
+#def register_drm_handlers(bot):
+    #@bot.on_message(filters.private & (filters.document | filters.text))
+    #async def call_drm_handler(bot: Client, m: Message):
+        #await drm_handler(bot, m)
+
 def register_drm_handlers(bot):
-    @bot.on_message(filters.private & (filters.document | filters.text))
-    async def call_drm_handler(bot: Client, m: Message):
-        await drm_handler(bot, m)
+    @bot.on_message(filters.command("drm") & filters.private)
+    async def drm_command_handler(bot: Client, m):
+        await m.reply("Send document or text (30s).")
+        chat_id = m.chat.id
+        try:
+            msg = await asyncio.wait_for(bot.listen(chat_id).__anext__(), timeout=30)
+        except asyncio.TimeoutError:
+            await bot.send_message(chat_id, "DRM timed out.")
+            return
+
+        # overwrite m with the new message
+        m = msg  
+
+        # ab aapke aage ke code me 'm' hi use hoga
+        await call_drm_handler(bot, m)
