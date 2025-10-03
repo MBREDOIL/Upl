@@ -1076,7 +1076,7 @@ def register_drm_handlers(bot):
         await m.reply("Send document or text (30s).")
         chat_id = m.chat.id
         try:
-            msg = await asyncio.wait_for(bot.listen(chat_id).__anext__(), timeout=30)
+            msg = await asyncio.wait_for(await bot.listen(chat_id).__anext__(), timeout=30)
         except asyncio.TimeoutError:
             await bot.send_message(chat_id, "DRM timed out.")
             return
@@ -1093,7 +1093,7 @@ def register_drm_handlers(bot):
         await m.reply("Send document or text (30s).")
         chat_id = m.chat.id
         try:
-            msg = await asyncio.wait_for(bot.listen(chat_id).__anext__(), timeout=30)
+            msg = await asyncio.wait_for(await bot.listen(chat_id).__anext__(), timeout=30)
         except asyncio.TimeoutError:
             await bot.send_message(chat_id, "DRM timed out.")
             return
