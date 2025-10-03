@@ -1071,36 +1071,26 @@ async def drn_handler(bot: Client, m: Message):
         #await drm_handler(bot, m)
 
 def register_drm_handlers(bot):
+
     @bot.on_message(filters.command("drm") & filters.private)
     async def drm_command_handler(bot: Client, m):
         await m.reply("Send document or text (30s).")
-        chat_id = m.chat.id
         try:
-            msg = await asyncio.wait_for(await bot.listen(chat_id).__anext__(), timeout=30)
+            m = await bot.ask(m.chat.id, timeout=30)  # next Message awaited directly
         except asyncio.TimeoutError:
-            await bot.send_message(chat_id, "DRM timed out.")
+            await bot.send_message(m.chat.id, "DRM timed out.")
             return
 
-        # overwrite m with the new message
-        m = msg  
-
-        # ab aapke aage ke code me 'm' hi use hoga
         await call_drm_handler(bot, m)
-
 
     @bot.on_message(filters.command("drn") & filters.private)
     async def drm_command_handler(bot: Client, m):
         await m.reply("Send document or text (30s).")
-        chat_id = m.chat.id
         try:
-            msg = await asyncio.wait_for(await bot.listen(chat_id).__anext__(), timeout=30)
+            m = await bot.ask(m.chat.id, timeout=30)  # next Message awaited directly
         except asyncio.TimeoutError:
-            await bot.send_message(chat_id, "DRM timed out.")
+            await bot.send_message(m.chat.id, "DRM timed out.")
             return
 
-        # overwrite m with the new message
-        m = msg  
-
-        # ab aapke aage ke code me 'm' hi use hoga
         await call_drn_handler(bot, m)
         
