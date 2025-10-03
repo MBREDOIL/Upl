@@ -1074,23 +1074,40 @@ def register_drm_handlers(bot):
 
     @bot.on_message(filters.command("drm") & filters.private)
     async def drm_command_handler(bot: Client, m):
-        await m.reply("Send document or text (30s).")
         try:
-            m = await bot.ask(m.chat.id, timeout=30)  # next Message awaited directly
-        except asyncio.TimeoutError:
-            await bot.send_message(m.chat.id, "DRM timed out.")
-            return
+            # 👇 yaha correctly ask use kiya gaya hai
+            answer = await bot.ask(
+                m.chat.id,
+                "Send document or text (30s).",  # prompt user
+                timeout=30
+            )
 
-        await call_drm_handler(bot, m)
+            # overwrite m with the reply so downstream code me 'm' hi use ho
+            m = answer  
+
+            # ab m ko hi process karenge
+            await call_drm_handler(bot, m)
+
+        except Exception as e:
+            await m.reply(f"❌ Error: {e}")
 
     @bot.on_message(filters.command("drn") & filters.private)
     async def drm_command_handler(bot: Client, m):
-        await m.reply("Send document or text (30s).")
         try:
-            m = await bot.ask(m.chat.id, timeout=30)  # next Message awaited directly
-        except asyncio.TimeoutError:
-            await bot.send_message(m.chat.id, "DRM timed out.")
-            return
+            # 👇 yaha correctly ask use kiya gaya hai
+            answer = await bot.ask(
+                m.chat.id,
+                "Send document or text (30s).",  # prompt user
+                timeout=30
+            )
 
-        await call_drn_handler(bot, m)
+            # overwrite m with the reply so downstream code me 'm' hi use ho
+            m = answer  
+
+            # ab m ko hi process karenge
+            await call_drn_handler(bot, m)
+
+        except Exception as e:
+            await m.reply(f"❌ Error: {e}")
+        
         
