@@ -20,6 +20,7 @@ from pathlib import Path
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 from base64 import b64decode
+import random
 
 def duration(filename):
     result = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
@@ -29,6 +30,12 @@ def duration(filename):
         stderr=subprocess.STDOUT)
     return float(result.stdout)
 
+def random_color():
+    """Return random RGB with alpha transparency (0.75 opacity)"""
+    r = random.randint(100, 255)
+    g = random.randint(100, 255)
+    b = random.randint(100, 255)
+    return f"{r}/{g}/{b}@0.75"
 
 
 def get_mps_and_keys(api_url):
@@ -297,7 +304,7 @@ async def download_and_decrypt_video(url, cmd, name, key):
             print(f"Failed to decrypt {video_path}.")  
             return None  
 
-async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, name, prog, channelid):
+async def send_vidd_mark(bot: Client, m: Message, cc, filename, vidwatermark, thumb, name, prog, channelid):
     subprocess.run(f'ffmpeg -i "{filename}" -ss 00:00:10 -vframes 1 "{filename}.jpg"', shell=True)
     await prog.delete(True)
     reply1 = await bot.send_message(channelid, f"📩 Uploading Video 📩:-\n<blockquote>{name}</blockquote>")
@@ -358,6 +365,92 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
         os.remove(output_file)
     if os.path.exists(f"{filename}.jpg"):
         os.remove(f"{filename}.jpg")
+
+    await reply.delete(True)
+    await reply1.delete(True)
+
+
+
+
+
+async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, name, prog, channelid):
+    # Generate thumbnail from 10th second
+    subprocess.run(f'ffmpeg -i "{filename}" -ss 00:00:10 -vframes 1 "{filename}.jpg"', shell=True)
+    await prog.delete(True)
+
+    reply1 = await bot.send_message(channelid, f"📩 Uploading Video 📩:-\n<blockquote>{name}</blockquote>")
+    reply = await m.reply_text(f"Generate Thumbnail:\n<blockquote>{name}</blockquote>")
+
+    try:
+        # Thumbnail logic
+        if thumb == "/d":
+            thumbnail = f"{filename}.jpg"
+        else:
+            thumbnail = thumb  
+
+        # ✅ Apply watermark only on thumbnail
+        if vidwatermark != "/d":
+            wm_thumb = f"wm_{os.path.basename(thumbnail)}"
+            font_path = "vidwater.ttf"
+
+            # escape text safely for ffmpeg
+            safe_text = vidwatermark.replace(":", "\\:").replace("'", "\\'")
+
+            # dynamic random color
+            color = random_color()
+
+            ffmpeg_cmd = (
+                f'ffmpeg -y -i "{thumbnail}" -vf '
+                f'"drawtext=fontfile={font_path}:text=\'{safe_text}\':'
+                f'fontcolor={color}:fontsize=(h/10):x=(w-text_w)/2:y=(h-text_h)/2" '
+                f'"{wm_thumb}"'
+            )
+
+            try:
+                subprocess.run(ffmpeg_cmd, shell=True, check=True)
+                thumbnail = wm_thumb
+            except Exception as wm_err:
+                await m.reply_text(f"⚠️ Watermark failed, sending plain thumbnail.\nError: {wm_err}")
+                thumbnail = f"{filename}.jpg"
+
+        output_file = filename  # video no watermark
+
+    except Exception as e:
+        await m.reply_text("❌ Thumbnail watermark error:\n" + str(e))
+        output_file = filename
+        thumbnail = f"{filename}.jpg"
+
+    # Duration
+    dur = int(duration(output_file))
+    start_time = time.time()
+
+    # Upload video with thumbnail
+    try:
+        await bot.send_video(
+            channelid,
+            output_file,
+            caption=cc,
+            supports_streaming=True,
+            height=720,
+            width=1280,
+            thumb=thumbnail,
+            duration=dur,
+            progress=progress_bar,
+            progress_args=(reply, start_time)
+        )
+    except Exception:
+        await bot.send_document(
+            channelid,
+            output_file,
+            caption=cc,
+            progress=progress_bar,
+            progress_args=(reply, start_time)
+        )
+
+    # Cleanup
+    for f in [f"{filename}.jpg", f"wm_{os.path.basename(filename)}.jpg"]:
+        if os.path.exists(f):
+            os.remove(f)
 
     await reply.delete(True)
     await reply1.delete(True)
