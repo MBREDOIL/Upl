@@ -425,7 +425,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, vidwatermark, thumb, n
             ffmpeg_cmd = [
                 "ffmpeg", "-y", "-i", thumbnail,
                 "-vf", f"drawtext=fontfile='{font_path}':text='{safe_text}':"
-                       f"fontcolor={color}:fontsize=(h/5):x=(w-text_w)/2:y=(h-text_h)/2",
+                       f"fontcolor={color}:fontsize=(h/4):x=(w-text_w)/2:y=(h-text_h)/2",
                 wm_thumb
             ]
 
